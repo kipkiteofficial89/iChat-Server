@@ -8,6 +8,12 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 
+app.get("/", (req, res) => {
+    res.status(200).json({
+        message: "iCHAT SERVER IS RUNNING!"
+    })
+})
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
@@ -17,6 +23,7 @@ app.use('/api/users/v1/', userRoutes);
 
 const PORT = process.env.PORT || 9090;
 const MONGO_URI = process.env.MONGO_URI;
+
 mongoose.connect(MONGO_URI)
     .then(() => {
         if (mongoose.connection) {
