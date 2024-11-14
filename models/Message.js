@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const msgSchema = new mongoose.Schema({
+    genc_id: String,
     msg: String,
     sender: {
         type: mongoose.Schema.Types.ObjectId,

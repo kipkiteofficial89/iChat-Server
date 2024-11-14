@@ -25,8 +25,9 @@ io.on('connection', (socket) => {
     })
 
     socket.on('sendMessage', async (data) => {
-        const { roomId, msg, sender, receiver } = data;
+        const { roomId, genc_id, msg, sender, receiver } = data;
         const message = {
+            genc_id,
             msg,
             sender,
             receiver,
@@ -39,11 +40,11 @@ io.on('connection', (socket) => {
     })
 
     socket.on('react', async (data) => {
-        const { roomId, userId, msgId, name, profile, react } = data;
-        const reaction = { userId, name, profile, react, msgId };
+        const { roomId, userId, genc_id, name, profile, react } = data;
+        const reaction = { userId, name, profile, react, genc_id };
 
         await Message.findOneAndUpdate({
-            _id: msgId,
+            genc_id,
             'reactions.userId': userId
         },
 
@@ -59,8 +60,8 @@ io.on('connection', (socket) => {
 
         ).then(async (result) => {
             if (!result) {
-                await Message.findByIdAndUpdate(
-                    msgId,
+                await Message.findOneAndUpdate(
+                    { genc_id },
                     { $addToSet: { reactions: reaction } },
                     { new: true }
                 )
@@ -68,6 +69,19 @@ io.on('connection', (socket) => {
         }).catch(err => console.log(err));
 
         io.to(roomId).emit('reactFromServer', reaction);
+    })
+
+    socket.on('removeReact', async (data) => {
+        const { userId, genc_id, roomId } = data;
+        await Message.findOneAndUpdate(
+            { genc_id },
+            { $pull: { reactions: { userId } } },
+            { new: true }
+        )
+        io.to(roomId).emit('removeReactServer', {
+            userId,
+            genc_id
+        })
     })
 
     socket.on('disconnect', () => {
