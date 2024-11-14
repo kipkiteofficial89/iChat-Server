@@ -57,3 +57,53 @@ exports.getUser = async (req, res) => {
         console.log(err);
     }
 }
+
+exports.searchPeople = async (req, res) => {
+    try {
+        const { value } = req.query;
+        if (value === "") {
+            res.status(200).json({
+                connected_peoples: []
+            })
+        } else {
+            const reg = new RegExp(value.trim(), 'i');
+            const SP = await User.find({
+                $or: [
+                    { name: { $regex: reg } },
+                    { username: { $regex: reg } }
+                ]
+            })
+            res.status(200).json({
+                connected_peoples: SP
+            })
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+exports.getUserInfo = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        const findUser = await User.findById(userId);
+        res.status(200).json({
+            msg: 'User fetched successfully!',
+            usr: findUser
+        })
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+exports.fetchConnectedPeoples = async (req, res) => {
+    try {
+        const { userId } = req;
+        const peoples = await User.findById(userId, { _id: 0, name: 0, username: 0, email: 0, phone: 0, about: 0, profile: 0, createdAt: 0, updatedAt: 0, __v: 0 }).populate({
+            path: 'connected_peoples',
+            select: '-connected_peoples'
+        })
+        res.status(200).json(peoples);
+    } catch (err) {
+        console.log(err);
+    }
+}
