@@ -98,7 +98,7 @@ exports.getUserInfo = async (req, res) => {
 exports.fetchConnectedPeoples = async (req, res) => {
     try {
         const { userId } = req;
-        const peoples = await User.findById(userId, { _id: 0, name: 0, username: 0, email: 0, phone: 0, about: 0, profile: 0, createdAt: 0, updatedAt: 0, __v: 0 }).populate({
+        const peoples = await User.findById(userId, { _id: 0, name: 0, username: 0, email: 0, phone: 0, about: 0, profile: 0, __v: 0 }).populate({
             path: 'connected_peoples',
             select: '-connected_peoples'
         })

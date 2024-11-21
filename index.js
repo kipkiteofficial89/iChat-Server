@@ -16,6 +16,8 @@ const server = http.createServer(app);
 
 const io = new Server(server);
 
+let onlineUsers = [];
+
 io.on('connection', (socket) => {
     console.log('Someone connected!');
     io.emit('someoneConnected', 'A new user connected.');
@@ -25,17 +27,18 @@ io.on('connection', (socket) => {
     })
 
     socket.on('sendMessage', async (data) => {
-        const { roomId, genc_id, msg, sender, receiver } = data;
+        const { roomId, genc_id, msg, sender, receiver, replyMsg } = data;
         const message = {
             genc_id,
             msg,
             sender,
             receiver,
+            replyMsg: replyMsg,
             reactions: []
         }
         await User.findByIdAndUpdate(sender, { $addToSet: { connected_peoples: receiver } }, { new: true })
         await User.findByIdAndUpdate(receiver, { $addToSet: { connected_peoples: sender } }, { new: true })
-        new Message(message).save();
+        await new Message(message).save();
         io.to(roomId).emit('sendFromServer', message);
     })
 
@@ -47,7 +50,6 @@ io.on('connection', (socket) => {
             genc_id,
             'reactions.userId': userId
         },
-
             {
                 $set: {
                     'reactions.$.react': react
@@ -84,8 +86,20 @@ io.on('connection', (socket) => {
         })
     })
 
+    socket.on('onlineUser', (data) => {
+        const isOnlineUser = onlineUsers.some((id) => id === data);
+        if (!isOnlineUser) onlineUsers.push({ userId: data, socketId: socket.id });
+        io.emit('onlineUserServer', onlineUsers);
+    })
+
+    socket.on('selectedUserId', ({ receiver, sender, roomId }) => {
+        io.to(roomId).emit('selectedUserIdServer', { receiver, sender });
+    });
+
+
     socket.on('disconnect', () => {
-        io.emit('someoneDisconnected', 'Someone disconnected.');
+        onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+        io.emit('onlineUserServer', onlineUsers);
     })
 })
 

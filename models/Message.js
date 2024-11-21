@@ -11,6 +11,13 @@ const msgSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    status: {
+        type: String,
+        default: 'Unread'
+    },
+    replyMsg: {
+        type: Object,
+    },
     reactions: {
         type: Array,
         default: [],
