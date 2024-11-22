@@ -1,3 +1,4 @@
+const Message = require('../models/Message');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
@@ -98,12 +99,36 @@ exports.getUserInfo = async (req, res) => {
 exports.fetchConnectedPeoples = async (req, res) => {
     try {
         const { userId } = req;
-        const peoples = await User.findById(userId, { _id: 0, name: 0, username: 0, email: 0, phone: 0, about: 0, profile: 0, __v: 0 }).populate({
-            path: 'connected_peoples',
-            select: '-connected_peoples'
+        const messages = await Message.find({
+            $or: [
+                { sender: userId },
+                { receiver: userId },
+            ]
         })
-        res.status(200).json(peoples);
+            .sort({ createdAt: -1 })
+            .populate([
+                {
+                    path: 'sender',
+                },
+                {
+                    path: 'receiver',
+                }
+            ])
+        const connectedUsers = new Map();
+
+        messages.forEach(msg => {
+            if (msg.sender && msg.sender._id.toString() !== userId) {
+                connectedUsers.set(msg.sender._id.toString(), msg.sender);
+            }
+            if (msg.receiver && msg.receiver._id.toString() !== userId) {
+                connectedUsers.set(msg.receiver._id.toString(), msg.receiver);
+            }
+        });
+        res.status(200).json({
+            connected_peoples: Array.from(connectedUsers.values()),
+        });
     } catch (err) {
         console.log(err);
+        res.status(500).json({ error: 'Server error' });
     }
-}
+};

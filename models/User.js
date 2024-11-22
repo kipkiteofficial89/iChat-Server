@@ -7,12 +7,6 @@ const userSchema = new mongoose.Schema({
     phone: String,
     about: String,
     profile: String,
-    connected_peoples: [
-        {
-            type: mongoose.Types.ObjectId,
-            ref: 'User'
-        }
-    ]
 }, {
     timestamps: true
 })

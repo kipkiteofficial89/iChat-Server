@@ -36,8 +36,6 @@ io.on('connection', (socket) => {
             replyMsg: replyMsg,
             reactions: []
         }
-        await User.findByIdAndUpdate(sender, { $addToSet: { connected_peoples: receiver } }, { new: true })
-        await User.findByIdAndUpdate(receiver, { $addToSet: { connected_peoples: sender } }, { new: true })
         await new Message(message).save();
         io.to(roomId).emit('sendFromServer', message);
     })
@@ -92,10 +90,9 @@ io.on('connection', (socket) => {
         io.emit('onlineUserServer', onlineUsers);
     })
 
-    socket.on('selectedUserId', ({ receiver, sender, roomId }) => {
-        io.to(roomId).emit('selectedUserIdServer', { receiver, sender });
-    });
-
+    // socket.on('updateChat', ({ receiver, sender, roomId }) => {
+    //     io.to(roomId).emit('updateChatServer', { receiver, sender });
+    // });
 
     socket.on('disconnect', () => {
         onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
